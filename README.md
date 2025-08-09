@@ -12,15 +12,18 @@ The Wav2Lip node is a custom node for ComfyUI that allows you to perform lip-syn
 ## Features
 
 - Lip-syncing of videos using the Wav2Lip model
-- Support for various face detection models
-- Audio path upload for input audio file
+- Uses cache for face detection. Speedup from 60 seconds to just 10 seconds of inference for a cached video. To clear cache: change number of input frames or change video.
+- New settings: fps, pad_bottom (pixels to fit chin), model selection
 
 ## Inputs
 
 - `images`: Input video frames (required)
 - `audio`: Input audio file (required)
-- `mode`: Processing mode, either "sequential" or "repetitive" (default: "sequential")
-- `face_detect_batch`: Batch size for face detection (default: 8)
+- `mode`: Processing mode, either "sequential" or "repetitive" (default: "repetitive")
+- `face_detect_batch`: Batch size for face detection (default: 4)
+- `model`: manually put wav2lip_gan.pth(required), wav2lip.pth(optional) or wav2lip.onnx(optional) into /ComfyUI_wav2lip/wav2lip/checkpoints/
+- `pad_bottom`: Increase to 15-25 if chin on video doesn't fit into box (default: 10)
+- `fps`: set the same fps for input video, wav2lip and output video. 25-60 works ok (default: 25)
 
 ## Outputs
 
@@ -83,6 +86,7 @@ for sharing their code.
 - [DPE: Disentanglement of Pose and Expression for General Video Portrait Editing (CVPR 2023)](https://github.com/Carlyx/DPE)
 - [3D GAN Inversion with Facial Symmetry Prior (CVPR 2023)](https://github.com/FeiiYin/SPI/)
 - [T2M-GPT: Generating Human Motion from Textual Descriptions with Discrete Representations (CVPR 2023)](https://github.com/Mael-zys/T2M-GPT)
+
 
 
 
