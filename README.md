@@ -5,8 +5,7 @@
 
 The Wav2Lip node is a custom node for ComfyUI that allows you to perform lip-syncing on videos using the Wav2Lip model. It takes an input video and an audio file and generates a lip-synced output video.
 
-![wav2lip](https://github.com/user-attachments/assets/e6ebf932-50da-45a6-8f31-f74f8182bc15)
-
+![wav2lip](https://github.com/user-attachments/assets/bc3a0d94-be25-427a-a605-781936f4c9db)
 
 
 
@@ -32,7 +31,7 @@ The Wav2Lip node is a custom node for ComfyUI that allows you to perform lip-syn
 
 1. Clone the repository to custom_nodes folder:
    ```
-   git clone https://github.com/ShmuelRonen/ComfyUI_wav2lip.git
+   git clone https://github.com/Mozer/ComfyUI_wav2lip.git
    ```
 
 2. Install the required dependencies:
@@ -84,5 +83,6 @@ for sharing their code.
 - [DPE: Disentanglement of Pose and Expression for General Video Portrait Editing (CVPR 2023)](https://github.com/Carlyx/DPE)
 - [3D GAN Inversion with Facial Symmetry Prior (CVPR 2023)](https://github.com/FeiiYin/SPI/)
 - [T2M-GPT: Generating Human Motion from Textual Descriptions with Discrete Representations (CVPR 2023)](https://github.com/Mael-zys/T2M-GPT)
+
 
 
