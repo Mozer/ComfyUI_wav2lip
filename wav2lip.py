@@ -10,6 +10,7 @@ import torchaudio
 from pathlib import Path
 import subprocess
 import hashlib
+import cv2
 
 def find_folder(base_path, folder_name):
     for root, dirs, files in os.walk(base_path):
@@ -109,10 +110,12 @@ class Wav2Lip:
         return {
             "required": {
                 "images": ("IMAGE",),
-                "mode": (["sequential", "repetitive"], {"default": "sequential"}),
-                "face_detect_batch": ("INT", {"default": 8, "min": 1, "max": 100}),
+                "mode": (["sequential", "repetitive"], {"default": "repetitive"}),
+                "face_detect_batch": ("INT", {"default": 4, "min": 1, "max": 100}),                
                 "audio": ("AUDIO",),
                 "model_file": (available_models, {"default": "wav2lip_gan.pth"}),
+                "pad_bottom": ("INT", {"default": 10, "min": -50, "max": 50}),
+                "fps": ("FLOAT", {"default": 25.0, "min": 0, "max": 60.0}),
             },
         }
 
@@ -122,17 +125,23 @@ class Wav2Lip:
     RETURN_NAMES = ("images", "audio",)
     FUNCTION = "process"
 
-    def process(self, images, mode, face_detect_batch, audio, model_file):
+    def process(self, images, mode, face_detect_batch, audio, model_file, pad_bottom, fps):
         # Get the full path to the selected model
         model_path = checkpoints_path / model_file
         if not model_path.exists():
             raise ValueError(f"Selected model file {model_file} not found in {checkpoints_path}")
 
         in_img_list = []
-        for i in images:
+        for idx, i in enumerate(images):
             in_img = i.numpy().squeeze()
-            in_img = (in_img * 255).astype(np.uint8)
+            np.clip(in_img, 0, 1)
+            in_img = np.round(in_img * 255).astype(np.uint8)
+            in_img = cv2.cvtColor(in_img, cv2.COLOR_BGR2RGB)  # Convert to RGB
+            #in_img = (in_img * 255).astype(np.uint8)
             in_img_list.append(in_img)
+            # 2. Save each frame as PNG
+            frame_path = os.path.join('frames', f'frame_{idx:04d}.png')  # e.g., frame_0000.png
+            cv2.imwrite(frame_path, in_img)  # Save the image
 
         if audio is None or "waveform" not in audio or "sample_rate" not in audio:
             raise ValueError("Valid audio input is required.")
@@ -177,7 +186,7 @@ class Wav2Lip:
 
         try:
             # Process with selected Wav2Lip model
-            out_img_list = wav2lip_(in_img_list, temp_audio_path, face_detect_batch, mode, model_path)
+            out_img_list = wav2lip_(in_img_list, temp_audio_path, face_detect_batch, mode, model_path, pad_bottom, fps)
         finally:
             os.unlink(temp_audio_path)
             print(f"Deleted temporary audio file at {temp_audio_path}")
