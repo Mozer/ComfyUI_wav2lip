@@ -3,16 +3,15 @@
 
 ## Wav2Lip Node for ComfyUI
 
-The Wav2Lip node is a custom node for ComfyUI that allows you to perform lip-syncing on videos using the Wav2Lip model. It takes an input video and an audio file and generates a lip-synced output video.
+The Wav2Lip node is a custom node for ComfyUI that allows you to perform lip-syncing on videos using the Wav2Lip model. It takes an input video and an audio file and generates a lip-synced output video. Workflow for comfyUI is inside this picture:
 
-![wav2lip](https://github.com/user-attachments/assets/bc3a0d94-be25-427a-a605-781936f4c9db)
-
+![wav2lip](https://github.com/user-attachments/assets/a045124f-64c4-4cbe-844a-7c6a19ee1992)
 
 
 ## Features
 
 - Lip-syncing of videos using the Wav2Lip model
-- Uses cache for face detection. Speedup from 60 seconds to just 10 seconds of inference for a cached video. To clear cache: change number of input frames or change video.
+- Uses cache for face detection of the last video. Speedup from 60 seconds to just 10 seconds of inference for a cached video.
 - New settings: fps, pad_bottom (pixels to fit chin), model selection
 
 ## Inputs
