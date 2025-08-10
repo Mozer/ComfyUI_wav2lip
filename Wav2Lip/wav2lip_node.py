@@ -29,24 +29,37 @@ def get_smoothened_boxes(boxes, T):
 CACHE_DIR = "wav2lip_cache"
 CACHE_FILE = os.path.join(CACHE_DIR, "last_face_detect_cache.pkl")
 
-def compute_video_hash(images):
-    """Compute hash from first and last frame of video"""
-    if len(images) == 0:
-        return hashlib.sha256().hexdigest()  # Empty hash
+def compute_video_hash(images, params_dict=None):
+    """Compute hash from first and last frame of video and parameters"""
+    if params_dict is None:
+        params_dict = {}
     
-    # Process first frame
-    first_frame = images[0]
-    if len(first_frame.shape) == 3:
-        first_frame = cv2.cvtColor(first_frame, cv2.COLOR_BGR2GRAY)
+    # Create hash object
+    video_hash = hashlib.sha256()
     
-    # Process last frame
-    last_frame = images[-1]
-    if len(last_frame.shape) == 3:
-        last_frame = cv2.cvtColor(last_frame, cv2.COLOR_BGR2GRAY)
+    # Hash parameters first (consistent ordering)
+    if params_dict:
+        # Convert params to sorted string representation
+        params_str = ','.join(f"{k}={v}" for k, v in sorted(params_dict.items()))
+        video_hash.update(params_str.encode('utf-8'))
     
-    # Combine frame data
-    combined_data = first_frame.tobytes() + last_frame.tobytes()
-    return hashlib.sha256(combined_data).hexdigest()
+    # Hash video frames if available
+    if len(images) > 0:
+        # Process first frame
+        first_frame = images[0]
+        if len(first_frame.shape) == 3:
+            first_frame = cv2.cvtColor(first_frame, cv2.COLOR_BGR2GRAY)
+        
+        # Process last frame
+        last_frame = images[-1]
+        if len(last_frame.shape) == 3:
+            last_frame = cv2.cvtColor(last_frame, cv2.COLOR_BGR2GRAY)
+        
+        # Update hash with frame data
+        video_hash.update(first_frame.tobytes())
+        video_hash.update(last_frame.tobytes())
+
+    return video_hash.hexdigest()
 
 def clear_previous_caches():
     """Remove all previous cache files"""
@@ -56,14 +69,21 @@ def clear_previous_caches():
                 os.remove(cache_file)
         except OSError:
             pass
-
-def face_detect_with_cache(images, face_detect_batch, pad_bottom=10):
+            
+def face_detect_with_cache(images, face_detect_batch, pad_bottom=10, fps=25.0):
     """Face detection with caching mechanism"""
     # Create cache directory if needed
     os.makedirs(CACHE_DIR, exist_ok=True)
     
-    # Compute video hash from first and last frame
-    video_hash = compute_video_hash(images)
+    # Prepare parameters for cache key
+    params = {
+        'pad_bottom': pad_bottom,
+        'fps': fps
+        # Add other parameters here as needed
+    }
+    
+    # Compute combined hash of frames and parameters
+    video_hash = compute_video_hash(images, params)
     
     # Check cache existence
     if os.path.exists(CACHE_FILE):
@@ -131,12 +151,12 @@ def face_detect(images, face_detect_batch, pad_bottom=10):
     del detector
     return results
 
-def datagen(frames, mels, face_detect_batch, mode, pad_bottom=10):
+def datagen(frames, mels, face_detect_batch, mode, pad_bottom=10, fps=25.0):
     img_size = 96
     img_batch, mel_batch, frame_batch, coords_batch = [], [], [], []
     frame_size = len(frames)
 
-    face_det_results = face_detect_with_cache(frames, face_detect_batch, pad_bottom)
+    face_det_results = face_detect_with_cache(frames, face_detect_batch, pad_bottom, fps)
     
     repeat_frames = len(mels) / frame_size 
     for i, m in enumerate(mels):
@@ -222,7 +242,7 @@ def load_model(path):
     model = model.to(device)
     return model.eval()
     
-def wav2lip_(images, audio_path, face_detect_batch, mode, model_path, pad_bottom=10, fps=25):
+def wav2lip_(images, audio_path, face_detect_batch, mode, model_path, pad_bottom=10, fps=25.0):
     wav = audio.load_wav(audio_path, 16000)
     mel = audio.melspectrogram(wav)
     print(mel.shape)
@@ -241,7 +261,7 @@ def wav2lip_(images, audio_path, face_detect_batch, mode, model_path, pad_bottom
     print("Length of mel chunks: {}".format(len(mel_chunks)))
 
     batch_size = 128
-    gen = datagen(images.copy(), mel_chunks, face_detect_batch, mode, pad_bottom)
+    gen = datagen(images.copy(), mel_chunks, face_detect_batch, mode, pad_bottom, fps)
 
     o=0
 
